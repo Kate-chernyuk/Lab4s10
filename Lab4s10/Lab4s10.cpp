@@ -18,7 +18,7 @@ int main()
     vector < vector <int> > matrix(N);
     vector <int> to_matrix(N);
 
-    vector<int>::iterator it1, it0, it;
+    vector<int>::iterator it1, it0, it, itp;
     vector<vector<int>>::iterator it2;
 
     int i = 1;
@@ -48,6 +48,8 @@ int main()
     int n, l;
     cout << "\nВведите максимально возможное число элементов, какое может быть на плате\n";
     cin >> n;
+    cout << "Введите число контактов разъёма платы\n";
+    cin >> l;
 
     map<int, vector<int>> plats;
     vector<int> to_plat;
@@ -57,6 +59,8 @@ int main()
     vector <int> free_elems(N);
     iota(free_elems.begin(), free_elems.end(), 1);
     int elem;
+
+    vector <int> ban;
 
     while (!free_elems.empty()) {
         if (to_plat.size() == 0) {
@@ -74,7 +78,7 @@ int main()
         else {
             if (to_plat.size() < n) {
                 //int el=-1, max_el=0, sum_maxel=0;
-                vector <int> sums(N,0);
+                vector <int> sums(N, 0);
                 int sc0;
 
                 for (int i = 0; i < matrix.size(); i++) {
@@ -91,7 +95,7 @@ int main()
                             *it0 = sc0;
                         }
                         else {
-                            *it0 = -1;
+                            *it0 = 0;
                         }
                     }
                     else {
@@ -99,15 +103,72 @@ int main()
                     }
                 }
 
+                vector<int> diff;
+                sort(ban.begin(), ban.end());
+                set_difference(free_elems.begin(), free_elems.end(), ban.begin(), ban.end(), back_inserter(diff));
+
+                for (int i = 0; i < sums.size(); i++) {
+                    it = find(diff.begin(), diff.end(), i + 1);
+                    if (it == diff.end()) {
+                        sums[i] = -1;
+                    }
+                }
 
                 it0 = max_element(sums.begin(), sums.end());
+
+                /*    for (int i = 0; i < diff.size(); i++) {
+                        cout << diff[i] << " ";
+                    }
+
+                    cout << "\n"; */
+
                 int res = count(sums.begin(), sums.end(), *it0);
                 if (res == 1) {
-                    elem = distance(sums.begin(), it0) + 1;
-                    it1 = find(free_elems.begin(), free_elems.end(), elem);
-                    if (it1 != free_elems.end()) {
-                        to_plat.push_back(elem);
-                        free_elems.erase(it1);
+                    it = find(sums.begin(), sums.end(), *it0);
+                    elem = distance(sums.begin(), it) + 1;
+                    it1 = find(diff.begin(), diff.end(), elem);
+
+                    // cout << elem << " ";
+
+                    if (it1 != diff.end()) {
+                        it1 = find(free_elems.begin(), free_elems.end(), elem);
+                        int nrm = 0;
+
+                        for (int j = 0; j < N; j++) {
+                            it = find(to_plat.begin(), to_plat.end(), j + 1);
+                            if (!(it != to_plat.end()) && (j != elem - 1)) {
+                                nrm += matrix[elem - 1][j];
+                            }
+                        }
+
+                        for (int i = 0; i < to_plat.size(); i++) {
+                            for (int j = 0; j < N; j++) {
+                                if ((elem - 1 != j) && (to_plat[i] - 1 != j)) {
+                                    nrm += matrix[to_plat[i] - 1][j];
+                                }
+                            }
+                        }
+
+                        // cout << nrm << endl;
+
+                        if (nrm <= l) {
+                            if (it1 != free_elems.end()) {
+                                to_plat.push_back(elem);
+                                free_elems.erase(it1);
+                                ban.clear();
+                                diff.clear();
+                            }
+                        }
+                        else {
+                            ban.push_back(elem);
+                        }
+
+                        if (ban.size() == free_elems.size()) {
+                            plats[plats.size() + 1] = to_plat;
+                            to_plat.clear();
+                            ban.clear();
+                            diff.clear();
+                        }
                     }
                 }
                 else {
@@ -143,23 +204,61 @@ int main()
 
                     it0 = min_element(sums_min.begin(), sums_min.end());
                     elem = distance(sums_min.begin(), it0) + 1;
-                    it1 = find(free_elems.begin(), free_elems.end(), elem);
-                    if (it1 != free_elems.end()) {
-                        to_plat.push_back(elem);
-                        free_elems.erase(it1);
+                    it1 = find(diff.begin(), diff.end(), elem);
+
+                    if (it1 != diff.end()) {
+                        it1 = find(free_elems.begin(), free_elems.end(), elem);
+                        int nrm = 0;
+
+                        for (int j = 0; j < N; j++) {
+                            it = find(to_plat.begin(), to_plat.end(), j + 1);
+                            if (!(it != to_plat.end()) && (j != elem - 1)) {
+                                nrm += matrix[elem - 1][j];
+                            }
+                        }
+
+                        for (int i = 0; i < to_plat.size(); i++) {
+                            for (int j = 0; j < N; j++) {
+                                if ((elem - 1 != j) && (to_plat[i] - 1 != j)) {
+                                    nrm += matrix[to_plat[i] - 1][j];
+                                }
+                            }
+                        }
+
+                        if (nrm <= l) {
+                            if (it1 != free_elems.end()) {
+                                to_plat.push_back(elem);
+                                free_elems.erase(it1);
+                                ban.clear();
+                                diff.clear();
+                            }
+                        }
+                        else {
+                            ban.push_back(elem);
+                        }
+
+                        if (ban.size() == free_elems.size()) {
+                            plats[plats.size() + 1] = to_plat;
+                            to_plat.clear();
+                            ban.clear();
+                            diff.clear();
+                        }
                     }
                 }
-            } 
+            }
     
             else {
                 plats[plats.size() + 1] = to_plat;
                 to_plat.clear();
+                ban.clear();
             }
         }
 
     }
 
-    plats[plats.size() + 1] = to_plat;
+    if (to_plat.size() > 0) {
+        plats[plats.size() + 1] = to_plat;
+    }
 
     for (it3 = plats.begin(); it3 != plats.end(); it3++) {
         cout << "Плата" << (it3->first) << ": ";
